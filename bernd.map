@@ -1,0 +1,40 @@
+
+
+with(CodeGeneration):
+
+#===========
+# EXACT
+#===========
+dist1:=Radius*arccos(sin(theta1)*sin(theta)+cos(theta1)*cos(theta)*cos(phi-phi1));
+dist2:=Radius*arccos(sin(theta2)*sin(theta)+cos(theta2)*cos(theta)*cos(phi-phi2));
+
+
+#===========
+# SIMPLE
+#===========
+dtheta:=Theta2-Theta1;
+dphi  :=Phi2  -Phi1;
+
+h_phi:=Radius*cos(Pi/180.0*Mean_theta_deg_for_simple_method);
+h_theta:=Radius;
+ds:=sqrt((h_phi*dphi)^2+(h_theta*dtheta)^2);
+
+
+dist1:=subs(Theta1=theta1,Theta2=theta,Phi1=phi1,Phi2=phi,ds);
+dist2:=subs(Theta1=theta2,Theta2=theta,Phi1=phi2,Phi2=phi,ds);
+
+
+
+
+res0:=dist1+dist2-Required_total_distance;
+res1:=dist1-dist2;
+
+jac00:=diff(res0,theta);
+jac10:=diff(res1,theta);
+jac01:=diff(res0,phi);
+jac11:=diff(res1,phi);
+
+C(jac00,resultname="jac00");
+C(jac01,resultname="jac01");
+C(jac10,resultname="jac10");
+C(jac11,resultname="jac11");
