@@ -171,6 +171,7 @@ namespace SphericalCoordinates
      0.5*(Coord1.theta_deg()+Coord2.theta_deg());
 
     // Distance between original points
+    Method="Exact";
     double direct_distance=distance(coord1,coord2);
 
     // Desired new length
@@ -343,6 +344,7 @@ namespace SphericalCoordinates
     double h_theta=Radius;
     
     // Geometry
+    Method="Simplest";
     double orig_distance=distance(Coord2,Coord1);
     double alpha=acos(orig_distance/Required_total_distance);
 
@@ -380,8 +382,8 @@ namespace SphericalCoordinates
       // Converged?
       if (max_res>tol)
        {
-        std::cout << "Need to newton iterate" << std::endl;
-        unsigned max_iter=50;
+        std::cout << "Need to newton iterate. Max_res = " << max_res << std::endl;
+        unsigned max_iter=50; 
         for (unsigned iter=0;iter<max_iter;iter++)
          {
           
@@ -444,7 +446,7 @@ namespace SphericalCoordinates
       // No iteration was required
       else
        {
-        std::cout << "No need to newton iterate" << std::endl;
+        std::cout << "No need to newton iterate. Max_res = " << max_res << std::endl;
         converged=true;
        }
       
