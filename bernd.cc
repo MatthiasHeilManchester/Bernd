@@ -25,9 +25,12 @@ namespace SphericalCoordinates
  double Pi=4.0*atan(1.0);
  
 
+
+ 
  
  //===========================================================
-/// Coordinate class
+/// Coordinate class: Phi = latitude (around the equator)
+ ///                  Theta = longitude (south pole to north pole)
  //===========================================================
  class Coordinate
  {
@@ -101,13 +104,17 @@ namespace SphericalCoordinates
  };
 
 
-  
-  
- /// Compute distance
+
+ 
+ //========================================================
+ /// Compute distance; stand along helper function.
+ /// Method is set via global flag (hacky!)
+ //========================================================
  double distance(const Coordinate& coord1,
                  const Coordinate& coord2)
  {
-   
+
+  // Exact sphericalpolars
   if (Method=="Exact")
    {
     // https://www.kompf.de/gps/distcalc.html
@@ -118,6 +125,7 @@ namespace SphericalCoordinates
     double ds=Radius*acos(sin(lat1)*sin(lat2)+cos(lat1)*cos(lat2)*cos(lon2-lon1));
     return ds;
    }
+  // Flattened tangent plane with fixed theta in scale factor
   else if (Method=="Simplest")
    {
     double dtheta=coord2.theta()-coord1.theta();
@@ -143,7 +151,7 @@ namespace SphericalCoordinates
 
 
 //=======================================================
-/// hierher
+/// Point finder functor class
 //=======================================================
  class PointFinder
  {
@@ -151,7 +159,8 @@ namespace SphericalCoordinates
  
  public:
 
-  /// Constructor: Point1, Point2, required total distance
+  /// Constructor: Point1, Point2, required percentage increase
+  /// in length if going through the to-be-determined point.
   PointFinder(const Coordinate& coord1,
               const Coordinate& coord2,
               const double& percentage_excess_total_distance) :
@@ -161,7 +170,7 @@ namespace SphericalCoordinates
     Mean_theta_deg_for_simple_method=
      0.5*(Coord1.theta_deg()+Coord2.theta_deg());
 
-    // distance between original points
+    // Distance between original points
     double direct_distance=distance(coord1,coord2);
 
     // Desired new length
@@ -193,11 +202,6 @@ namespace SphericalCoordinates
     double dist2=distance(Coord2,coord);
     res[0]=dist1+dist2-Required_total_distance;
     res[1]=dist1-dist2;
-
-    // // hierher newton solver test
-    // res[0]=coord.theta()-1.0;
-    // res[1]=coord.phi()-2.0;
-   
    }
 
   // Jaobian
@@ -220,11 +224,33 @@ namespace SphericalCoordinates
      
 
       // Maple
-      jac00 = -Radius * (sin(theta1) * cos(theta) - cos(theta1) * sin(theta) * cos(phi - phi1)) * pow(-pow(sin(theta1) * sin(theta) + cos(theta1) * cos(theta) * cos(phi - phi1), 0.2e1) + 0.1e1, -0.1e1 / 0.2e1) - Radius * (sin(theta2) * cos(theta) - cos(theta2) * sin(theta) * cos(phi - phi2)) * pow(-pow(sin(theta2) * sin(theta) + cos(theta2) * cos(theta) * cos(phi - phi2), 0.2e1) + 0.1e1, -0.1e1 / 0.2e1);
-      jac01 = Radius * cos(theta1) * cos(theta) * sin(phi - phi1) * pow(-pow(sin(theta1) * sin(theta) + cos(theta1) * cos(theta) * cos(phi - phi1), 0.2e1) + 0.1e1, -0.1e1 / 0.2e1) + Radius * cos(theta2) * cos(theta) * sin(phi - phi2) * pow(-pow(sin(theta2) * sin(theta) + cos(theta2) * cos(theta) * cos(phi - phi2), 0.2e1) + 0.1e1, -0.1e1 / 0.2e1);
-      jac10 = -Radius * (sin(theta1) * cos(theta) - cos(theta1) * sin(theta) * cos(phi - phi1)) * pow(-pow(sin(theta1) * sin(theta) + cos(theta1) * cos(theta) * cos(phi - phi1), 0.2e1) + 0.1e1, -0.1e1 / 0.2e1) + Radius * (sin(theta2) * cos(theta) - cos(theta2) * sin(theta) * cos(phi - phi2)) * pow(-pow(sin(theta2) * sin(theta) + cos(theta2) * cos(theta) * cos(phi - phi2), 0.2e1) + 0.1e1, -0.1e1 / 0.2e1);
-      jac11 = Radius * cos(theta1) * cos(theta) * sin(phi - phi1) * pow(-pow(sin(theta1) * sin(theta) + cos(theta1) * cos(theta) * cos(phi - phi1), 0.2e1) + 0.1e1, -0.1e1 / 0.2e1) - Radius * cos(theta2) * cos(theta) * sin(phi - phi2) * pow(-pow(sin(theta2) * sin(theta) + cos(theta2) * cos(theta) * cos(phi - phi2), 0.2e1) + 0.1e1, -0.1e1 / 0.2e1);
-
+      jac00 = -Radius * (sin(theta1) * cos(theta) - cos(theta1) *
+      sin(theta) * cos(phi - phi1)) * pow(-pow(sin(theta1) *
+      sin(theta) + cos(theta1) * cos(theta) * cos(phi - phi1), 0.2e1)
+      + 0.1e1, -0.1e1 / 0.2e1) - Radius * (sin(theta2) * cos(theta) -
+      cos(theta2) * sin(theta) * cos(phi - phi2)) *
+      pow(-pow(sin(theta2) * sin(theta) + cos(theta2) * cos(theta) *
+      cos(phi - phi2), 0.2e1) + 0.1e1, -0.1e1 / 0.2e1); jac01 = Radius
+      * cos(theta1) * cos(theta) * sin(phi - phi1) *
+      pow(-pow(sin(theta1) * sin(theta) + cos(theta1) * cos(theta) *
+      cos(phi - phi1), 0.2e1) + 0.1e1, -0.1e1 / 0.2e1) + Radius *
+      cos(theta2) * cos(theta) * sin(phi - phi2) *
+      pow(-pow(sin(theta2) * sin(theta) + cos(theta2) * cos(theta) *
+      cos(phi - phi2), 0.2e1) + 0.1e1, -0.1e1 / 0.2e1); jac10 =
+      -Radius * (sin(theta1) * cos(theta) - cos(theta1) * sin(theta) *
+      cos(phi - phi1)) * pow(-pow(sin(theta1) * sin(theta) +
+      cos(theta1) * cos(theta) * cos(phi - phi1), 0.2e1) + 0.1e1,
+      -0.1e1 / 0.2e1) + Radius * (sin(theta2) * cos(theta) -
+      cos(theta2) * sin(theta) * cos(phi - phi2)) *
+      pow(-pow(sin(theta2) * sin(theta) + cos(theta2) * cos(theta) *
+      cos(phi - phi2), 0.2e1) + 0.1e1, -0.1e1 / 0.2e1); jac11 = Radius
+      * cos(theta1) * cos(theta) * sin(phi - phi1) *
+      pow(-pow(sin(theta1) * sin(theta) + cos(theta1) * cos(theta) *
+      cos(phi - phi1), 0.2e1) + 0.1e1, -0.1e1 / 0.2e1) - Radius *
+      cos(theta2) * cos(theta) * sin(phi - phi2) *
+      pow(-pow(sin(theta2) * sin(theta) + cos(theta2) * cos(theta) *
+      cos(phi - phi2), 0.2e1) + 0.1e1, -0.1e1 / 0.2e1);
+      // End maple
 
       jac[0][0]=jac00;
       jac[1][1]=jac11;
@@ -244,27 +270,52 @@ namespace SphericalCoordinates
       double phi2=Coord2.phi();
      
       double jac00,jac11,jac01,jac10;
-     
+
+      // maple
       double cg=Mean_theta_deg_for_simple_method;
-
       
-      jac00 = pow(pow(phi - phi1, 0.2e1) * Radius * Radius * pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(theta - theta1, 0.2e1) * Radius * Radius, -0.1e1 / 0.2e1) * (theta - theta1) * Radius * Radius + pow(pow(phi - phi2, 0.2e1) * Radius * Radius * pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(theta - theta2, 0.2e1) * Radius * Radius, -0.1e1 / 0.2e1) * (theta - theta2) * Radius * Radius;
+      jac00 = pow(pow(phi - phi1, 0.2e1) * Radius * Radius *
+      pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(theta - theta1,
+      0.2e1) * Radius * Radius, -0.1e1 / 0.2e1) * (theta - theta1) *
+      Radius * Radius + pow(pow(phi - phi2, 0.2e1) * Radius * Radius *
+      pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(theta - theta2,
+      0.2e1) * Radius * Radius, -0.1e1 / 0.2e1) * (theta - theta2) *
+      Radius * Radius;
 
 
-      jac01 = pow(pow(phi - phi1, 0.2e1) * Radius * Radius * pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(theta - theta1, 0.2e1) * Radius * Radius, -0.1e1 / 0.2e1) * (phi - phi1) * Radius * Radius * pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(pow(phi - phi2, 0.2e1) * Radius * Radius * pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(theta - theta2, 0.2e1) * Radius * Radius, -0.1e1 / 0.2e1) * (phi - phi2) * Radius * Radius * pow(cos(0.1745329252e-1 * cg), 0.2e1);
+      jac01 = pow(pow(phi - phi1, 0.2e1) * Radius * Radius *
+      pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(theta - theta1,
+      0.2e1) * Radius * Radius, -0.1e1 / 0.2e1) * (phi - phi1) *
+      Radius * Radius * pow(cos(0.1745329252e-1 * cg), 0.2e1) +
+      pow(pow(phi - phi2, 0.2e1) * Radius * Radius *
+      pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(theta - theta2,
+      0.2e1) * Radius * Radius, -0.1e1 / 0.2e1) * (phi - phi2) *
+      Radius * Radius * pow(cos(0.1745329252e-1 * cg), 0.2e1);
 
 
-      jac10 = pow(pow(phi - phi1, 0.2e1) * Radius * Radius * pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(theta - theta1, 0.2e1) * Radius * Radius, -0.1e1 / 0.2e1) * (theta - theta1) * Radius * Radius - pow(pow(phi - phi2, 0.2e1) * Radius * Radius * pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(theta - theta2, 0.2e1) * Radius * Radius, -0.1e1 / 0.2e1) * (theta - theta2) * Radius * Radius;
+      jac10 = pow(pow(phi - phi1, 0.2e1) * Radius * Radius *
+      pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(theta - theta1,
+      0.2e1) * Radius * Radius, -0.1e1 / 0.2e1) * (theta - theta1) *
+      Radius * Radius - pow(pow(phi - phi2, 0.2e1) * Radius * Radius *
+      pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(theta - theta2,
+      0.2e1) * Radius * Radius, -0.1e1 / 0.2e1) * (theta - theta2) *
+      Radius * Radius;
 
 
-      jac11 = pow(pow(phi - phi1, 0.2e1) * Radius * Radius * pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(theta - theta1, 0.2e1) * Radius * Radius, -0.1e1 / 0.2e1) * (phi - phi1) * Radius * Radius * pow(cos(0.1745329252e-1 * cg), 0.2e1) - pow(pow(phi - phi2, 0.2e1) * Radius * Radius * pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(theta - theta2, 0.2e1) * Radius * Radius, -0.1e1 / 0.2e1) * (phi - phi2) * Radius * Radius * pow(cos(0.1745329252e-1 * cg), 0.2e1);
-
+      jac11 = pow(pow(phi - phi1, 0.2e1) * Radius * Radius *
+      pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(theta - theta1,
+      0.2e1) * Radius * Radius, -0.1e1 / 0.2e1) * (phi - phi1) *
+      Radius * Radius * pow(cos(0.1745329252e-1 * cg), 0.2e1) -
+      pow(pow(phi - phi2, 0.2e1) * Radius * Radius *
+      pow(cos(0.1745329252e-1 * cg), 0.2e1) + pow(theta - theta2,
+      0.2e1) * Radius * Radius, -0.1e1 / 0.2e1) * (phi - phi2) *
+      Radius * Radius * pow(cos(0.1745329252e-1 * cg), 0.2e1);
+      // end maple
+      
       jac[0][0]=jac00;
       jac[1][1]=jac11;
       jac[1][0]=jac10;
       jac[0][1]=jac01;
-
-
 
      }
     else
@@ -282,7 +333,6 @@ namespace SphericalCoordinates
    {
     // Newton tolerance on max. residual relative to orig length
     double fractional_tol=1.0e-4;
-   
     
     // Create initial guess based on constant metric
     double phi_new=0.0;
@@ -303,12 +353,6 @@ namespace SphericalCoordinates
     
     phi_new  =Coord1.phi()  +0.5*Required_total_distance/h_phi  *cos(gamma);
     theta_new=Coord1.theta()+0.5*Required_total_distance/h_theta*sin(gamma);
-
-
-    // // Initial guess: Halfway in spherical polars
-    // theta_new=0.5*(Coord1.theta_deg()+Coord2.theta_deg());
-    // phi_new=0.5*(Coord1.phi_deg()+Coord2.phi_deg());
-
     
     // Initial guess: 
     Coordinate coord=Coordinate(theta_new*180.0/Pi,phi_new*180.0/Pi);
@@ -332,12 +376,6 @@ namespace SphericalCoordinates
       std::vector<double> res(2,0.0);
       residuals(coord,res);
       double max_res=std::max(fabs(res[0]),fabs(res[1]));
-
-      // hierher
-      // std::cout << "Resid: "
-      //           << res[0] << " "
-      //           << res[1] << " "
-      //           << max_res << std::endl;
       
       // Converged?
       if (max_res>tol)
@@ -350,7 +388,8 @@ namespace SphericalCoordinates
           std::vector<std::vector<double> > jac(2);
           jac[0].resize(2);
           jac[1].resize(2);
-          bool use_fd=false; // hierher
+          bool use_fd=false;
+          
           // Get the Jacobian by FDing
           if (use_fd)
            {
@@ -372,11 +411,6 @@ namespace SphericalCoordinates
               for (unsigned i=0;i<2;i++)
                {
                 jac[i][j]=(res_pls[i]-res[i])/fd_step;
-                // hierher
-                // std::cout << "jac " << i << " " << j << " "
-                //           << jac[i][j] << " RES: "
-                //           << res_pls[i] << " "  << res[i]
-                //           << std::endl;
                }
              }
            }
@@ -384,9 +418,6 @@ namespace SphericalCoordinates
           else
            {
             jacobian(coord,jac);
-            // hierher
-            // std::cout << "JAC: " << jac[0][0] << " " << jac[0][1] << std::endl;
-            // std::cout << "JAC: " << jac[1][0] << " " << jac[1][1] << std::endl; 
            }
           
           
@@ -402,18 +433,6 @@ namespace SphericalCoordinates
           residuals(coord,res);
           double max_res=std::max(fabs(res[0]),fabs(res[1]));
 
-          // hierher
-          // std::cout << "Iter: " << iter
-          //           << " Coord: " << " "
-          //           << coord.theta() << " "
-          //           << coord.phi() << " "
-          //           << " dCoord: " << " "
-          //           << dtheta << " "
-          //           << dphi << " "
-          //           << " Resid: "
-          //           << res[0] << " "
-          //           << res[1] << " "
-          //           << max_res << std::endl;
           if (max_res<tol)
            {
             converged=true;
@@ -485,23 +504,26 @@ namespace SphericalCoordinates
 int main()
 {
 
+ // Debug
  feenableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW);
 
  using namespace SphericalCoordinates;
 
  double percentage_increase=15.0;
 
+
+// Do a few tests
+ 
  std::cout << "\n====================================================\n\n";
  
-  
+ 
  Coordinate berlin(52.5164,13.3777);
  Coordinate lisbon(38.692668,-9.177944);
  Method="Exact";
  double dist_berlin_lisbon=distance(berlin,lisbon);
  std::cout << "Berlin-Lisbon: " <<  dist_berlin_lisbon << std::endl;
-
  PointFinder(berlin,lisbon,percentage_increase);
-  
+ 
  std::cout << "\n\n====================================================\n\n";
 
 //exit(0);
@@ -511,7 +533,6 @@ int main()
  Method="Exact";
  double dist_rhm=distance(rhm_bahnhof,rhm_bruecke);
  std::cout << "Rhm: " << dist_rhm << std::endl;
-
  PointFinder(rhm_bahnhof,rhm_bruecke,percentage_increase);
  
  std::cout << "\n\n====================================================\n\n";
@@ -522,7 +543,6 @@ int main()
  Method="Exact";
  double dist_bernd=distance(bernd1,bernd2);
  std::cout << "Bernd: " <<  dist_bernd<< std::endl;
-
  PointFinder(bernd1,bernd2,percentage_increase);
  
 
