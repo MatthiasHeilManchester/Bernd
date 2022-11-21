@@ -2,6 +2,7 @@
 #include<cmath>
 #include<vector>
 #include<fenv.h>
+#include<fstream>
 
 
 
@@ -107,15 +108,15 @@ namespace SphericalCoordinates
 
  
  //========================================================
- /// Compute distance; stand along helper function.
+ /// Compute distance; stand alone helper function.
  /// Method is set via global flag (hacky!)
  //========================================================
  double distance(const Coordinate& coord1,
                  const Coordinate& coord2)
  {
 
-  // Exact sphericalpolars
-  if (Method=="Exact")
+  // Exact spherical polars
+  if (Method=="ExactAndUnstable")
    {
     // https://www.kompf.de/gps/distcalc.html
     double lat1=coord1.theta();
@@ -123,8 +124,25 @@ namespace SphericalCoordinates
     double lon1=coord1.phi();
     double lon2=coord2.phi();
     double ds=Radius*acos(sin(lat1)*sin(lat2)+cos(lat1)*cos(lat2)*cos(lon2-lon1));
+
     return ds;
    }
+  // Alternative but stable method:
+  // https://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
+  else if (Method=="Exact")
+  {
+   double lat1=coord1.theta();
+   double lat2=coord2.theta();
+   double lon1=coord1.phi();
+   double lon2=coord2.phi();
+   double dLat = lat2-lat1;
+   double dLon = lon2-lon1;
+   double a = sin(dLat/2.0) * sin(dLat/2.0) +
+    sin(dLon/2.0) * sin(dLon/2.0) * cos(lat1) * cos(lat2); 
+   double c = 2.0 * atan2(sqrt(a),sqrt(1.0-a));
+   double ds=Radius*c;
+   return ds;
+  }
   // Flattened tangent plane with fixed theta in scale factor
   else if (Method=="Simplest")
    {
@@ -526,35 +544,85 @@ int main()
 // Do a few tests
  
  std::cout << "\n====================================================\n\n";
- 
- 
- Coordinate berlin(52.5164,13.3777);
- Coordinate lisbon(38.692668,-9.177944);
- Method="Exact";
- double dist_berlin_lisbon=distance(berlin,lisbon);
- std::cout << "Berlin-Lisbon: " <<  dist_berlin_lisbon << std::endl;
- PointFinder(berlin,lisbon,percentage_increase);
- 
+ {
+  
+  Coordinate berlin(52.5164,13.3777);
+  Coordinate lisbon(38.692668,-9.177944);
+  Method="Exact";
+  double dist_berlin_lisbon=distance(berlin,lisbon);
+  std::cout << "Berlin-Lisbon: " <<  dist_berlin_lisbon << std::endl;
+  PointFinder(berlin,lisbon,percentage_increase);
+ }
  std::cout << "\n\n====================================================\n\n";
-
-//exit(0);
-
- Coordinate rhm_bahnhof(49.9917,8.41321);
- Coordinate rhm_bruecke(50.0049,8.42182);
- Method="Exact";
- double dist_rhm=distance(rhm_bahnhof,rhm_bruecke);
- std::cout << "Rhm: " << dist_rhm << std::endl;
- PointFinder(rhm_bahnhof,rhm_bruecke,percentage_increase);
- 
+ {
+  Coordinate rhm_bahnhof(49.9917,8.41321);
+  Coordinate rhm_bruecke(50.0049,8.42182);
+  Method="Exact";
+  double dist_rhm=distance(rhm_bahnhof,rhm_bruecke);
+  std::cout << "Rhm: " << dist_rhm << std::endl;
+  PointFinder(rhm_bahnhof,rhm_bruecke,percentage_increase);
+ }
  std::cout << "\n\n====================================================\n\n";
- 
- 
- Coordinate bernd1(50.478238579,     8.2900669);
- Coordinate bernd2(50.47829943178574,8.289963);
- Method="Exact";
- double dist_bernd=distance(bernd1,bernd2);
- std::cout << "Bernd: " <<  dist_bernd<< std::endl;
- PointFinder(bernd1,bernd2,percentage_increase);
+ {
+  Coordinate bernd1(50.478238579,     8.2900669);
+  Coordinate bernd2(50.47829943178574,8.289963);
+  Method="Exact";
+  double dist_bernd=distance(bernd1,bernd2);
+  std::cout << "Bernd: " <<  dist_bernd<< std::endl;
+  PointFinder(bernd1,bernd2,percentage_increase);
+ }
+ std::cout << "\n\n====================================================\n\n";
+ {
+
+  // Assess stability of two different ways of computing the distance
+  std::ofstream some_file;
+  some_file.open("stability.dat");
+  some_file.precision(17);
+  
+  Coordinate bernd1(50.478238579,     8.2900669);
+  Coordinate bernd2(50.47829943178574,8.289963);
+
+  Method="ExactAndUnstable";
+  double dist_unstable=distance(bernd1,bernd2);
+  Method="Exact";
+  double dist_stable=distance(bernd1,bernd2);
+  double angular_distance=sqrt(pow(bernd1.theta()-bernd2.theta(),2)+
+                               pow(bernd1.phi()  -bernd2.phi()  ,2));
+  some_file << "ZONE" << std::endl;
+  some_file
+   << angular_distance << " "
+   << dist_stable << " "
+   << dist_unstable << " "
+   << fabs(dist_unstable-dist_stable)/fabs(dist_stable)*100.0 << " "
+   << std::endl;
+  some_file << "ZONE" << std::endl;
+
+  
+  double dtheta=10000.0*(bernd2.theta()-bernd1.theta());
+  double dphi  =10000.0*(bernd2.phi()  -bernd1.phi());
+  unsigned nstep=10;
+  for (unsigned i=0;i<nstep;i++)
+   {
+    Coordinate bernd_aux((bernd1.theta()+dtheta/pow(10.0,i))*180.0/Pi,
+                         (bernd1.phi()  +dphi  /pow(10.0,i))*180.0/Pi);
+    
+    Method="ExactAndUnstable";
+    double dist_unstable=distance(bernd1,bernd_aux);
+    Method="Exact";
+    double dist_stable=distance(bernd1,bernd_aux);
+    double angular_distance=sqrt(pow(bernd1.theta()-bernd_aux.theta(),2)+
+                                 pow(bernd1.phi()  -bernd_aux.phi()  ,2));
+    some_file
+     << angular_distance << " "
+     << dist_stable << " "
+     << dist_unstable << " "
+     << fabs(dist_unstable-dist_stable)/fabs(dist_stable)*100.0 << " "
+     << std::endl;
+     
+     }
+  some_file.close();
+
+ }
  
 
  return 0;
