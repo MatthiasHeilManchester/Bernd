@@ -471,9 +471,15 @@ namespace SphericalCoordinates
         std::cout << "Orig   distance via two   points: "
                   << orig_dist               << std::endl;
         std::cout << "Actual distance via three points: "
-                  << final_dist1+final_dist2 << std::endl;
+                  << final_dist1+final_dist2 << " "
+                  << " via: " << final_dist1 << " + " << final_dist2
+                  << " Diff: " << final_dist1-final_dist2 << " "
+                  << std::endl;
         std::cout << "Target distance via three points: "
-                  <<  Required_total_distance << std::endl;
+                  <<  Required_total_distance << " "
+                  << "Diff: "
+                  <<  final_dist1+final_dist2-Required_total_distance
+                  << std::endl;
 
        }
      } // end of loop over method
@@ -509,6 +515,9 @@ int main()
  // Debug
  feenableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW);
 
+ // Ful precision in output
+ std::cout.precision(17);
+ 
  using namespace SphericalCoordinates;
 
  double percentage_increase=15.0;

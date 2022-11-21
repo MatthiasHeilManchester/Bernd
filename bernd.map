@@ -1,6 +1,9 @@
 
 
 with(CodeGeneration):
+interface(displayprecision=20);
+
+Digits:=25;
 
 #===========
 # EXACT
@@ -8,6 +11,33 @@ with(CodeGeneration):
 dist1:=Radius*arccos(sin(theta1)*sin(theta)+cos(theta1)*cos(theta)*cos(phi-phi1));
 dist2:=Radius*arccos(sin(theta2)*sin(theta)+cos(theta2)*cos(theta)*cos(phi-phi2));
 
+
+part1_1:=(sin(theta1)*sin(theta));
+part2_1:=(cos(theta1)*cos(theta)*cos(phi-phi1));
+part3_1:=(sin(theta1)*sin(theta)+cos(theta1)*cos(theta)*cos(phi-phi1));
+
+
+#want_digits:=10;
+#for i from 1 to 4 do
+#want_digits:=want_digits+5;
+#Digits:=want_digits;
+print("Digits = ",Digits);
+
+
+Radius:=6378.388;
+Theta1:=50.47823857900000*Pi/180.0;
+Phi1:=   8.29006690000000*Pi/180.0;
+Theta2:=50.47829943178574*evalf(Pi/180.0);
+Phi2:=   8.28996300000000*Pi/180.0;
+
+test_bernd12:=evalf(subs(theta1=Theta1,phi1=Phi1,theta=Theta2,phi=Phi2,dist1));
+test_par1_1:=evalf(subs(theta1=Theta1,phi1=Phi1,theta=Theta2,phi=Phi2,part1_1));
+test_par2_1:=evalf(subs(theta1=Theta1,phi1=Phi1,theta=Theta2,phi=Phi2,part2_1));
+test_par3_1:=evalf(subs(theta1=Theta1,phi1=Phi1,theta=Theta2,phi=Phi2,part3_1));
+
+
+#end do;
+@;
 
 #===========
 # SIMPLE
@@ -38,3 +68,4 @@ C(jac00,resultname="jac00");
 C(jac01,resultname="jac01");
 C(jac10,resultname="jac10");
 C(jac11,resultname="jac11");
+
