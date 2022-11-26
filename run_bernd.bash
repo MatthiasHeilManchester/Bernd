@@ -5,7 +5,7 @@
 make bernd
 
 
-# Bernd's script decides no these...
+# Bernd's script decides on these...
 lon_deg1=50.478238579
 lat_deg1=8.2900669
 lon_deg2=50.47829943178574
@@ -30,6 +30,7 @@ command=`./bernd  --lon_deg1 $lon_deg1 --lat_deg1 $lat_deg1 \
 eval $command
 
 
+# bernd does his magic with these numbers...
 echo "Lon of intermediate point: "$lon_new
 echo "Lat of intermediate point: "$lat_new
 
