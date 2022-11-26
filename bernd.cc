@@ -1,9 +1,12 @@
 #include<iostream>
 #include<cmath>
 #include<vector>
+#include<set>
 #include<fenv.h>
 #include<fstream>
 
+#define VERBOSE
+#undef VERBOSE
 
 
 
@@ -203,9 +206,11 @@ namespace SphericalCoordinates
      }
     else
      {
+#ifdef VERBOSE
       std::cout << "percentage extra distance: "
                 << fabs(Required_total_distance-direct_distance)/
        fabs(direct_distance)*100.0 << std::endl;
+#endif      
      }
     find_new_point();
    }
@@ -387,8 +392,10 @@ namespace SphericalCoordinates
       Method="Simplest";
       if (method==1) Method="Exact";
 
+#ifdef VERBOSE
       std::cout << "Doing method = " << Method << std::endl;
-
+#endif
+      
       // Flag
       bool converged=false;
               
@@ -400,7 +407,10 @@ namespace SphericalCoordinates
       // Converged?
       if (max_res>tol)
        {
-        std::cout << "Need to newton iterate. Max_res = " << max_res << std::endl;
+#ifdef VERBOSE
+        std::cout << "Need to newton iterate. Max_res = "
+                  << max_res << std::endl;
+#endif
         unsigned max_iter=50; 
         for (unsigned iter=0;iter<max_iter;iter++)
          {
@@ -464,7 +474,10 @@ namespace SphericalCoordinates
       // No iteration was required
       else
        {
-        std::cout << "No need to newton iterate. Max_res = " << max_res << std::endl;
+#ifdef VERBOSE
+        std::cout << "No need to newton iterate. Max_res = "
+                  << max_res << std::endl;
+#endif
         converged=true;
        }
       
@@ -472,20 +485,24 @@ namespace SphericalCoordinates
       if (!converged)
        {
         std::cout << "Newton iteration didn't converge; die!" << std::endl;
-        //abort();
+        abort();
        }
       else
        {
-        std::cout << "Newton method converged! "
-                  << coord.theta_deg() << " "
-                  << coord.phi_deg() << " "
-                  << std::endl;
-        
+        // Tell us what you have!
+        if (Method=="Exact")
+         {
+          std::cout << "Lon (degrees) = " << coord.theta_deg() << " "
+                    << "Lat (degrees) = " << coord.phi_deg() << " "
+                    << std::endl;
+         }
+#ifdef VERBOSE
+         
         // Test:
         double final_dist1=distance(Coord1,coord);
         double final_dist2=distance(Coord2,coord);
         double orig_dist  =distance(Coord1,Coord2);
-        
+
         std::cout << "Orig   distance via two   points: "
                   << orig_dist               << std::endl;
         std::cout << "Actual distance via three points: "
@@ -498,7 +515,7 @@ namespace SphericalCoordinates
                   << "Diff: "
                   <<  final_dist1+final_dist2-Required_total_distance
                   << std::endl;
-
+#endif
        }
      } // end of loop over method
     
@@ -527,18 +544,120 @@ namespace SphericalCoordinates
 ////////////////////////////////////////////////////////////////////////////
 
 
-int main()
+int main(int argc, char** argv)
 {
 
  // Debug
  feenableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW);
 
- // Ful precision in output
+
+ // 4 or 5 items of input data with identifiers
+ std::string usage_string=
+  "\nUsage: \n\n ./bernd --lon_deg1 50.478238579 --lat_deg1 8.2900669  --lon_deg2 50.47829943178574 --lat_deg2 8.289963 --required_distance_metres 12.0  \n\n or \n\n ./bernd --lon_deg1 50.478238579 --lat_deg1 8.2900669  --lon_deg2 50.47829943178574 --lat_deg2 8.289963 \n\n";
+ if ((argc!=11)&&(argc!=9))
+  {
+   std::cout << "Error: argc = "<< argc << usage_string
+             << std::endl;
+   abort();
+  }
+
+  double lat_deg1=0.0;
+  double lon_deg1=0.0;
+  double lat_deg2=0.0;
+  double lon_deg2=0.0;
+  double required_distance_metres=0.0;
+  std::set<std::string> assigned_values;
+  unsigned count=1;
+  unsigned n_arg=(argc-1)/2;
+ for (unsigned i=1;i<n_arg+1;i++)
+  {
+   std::string key(argv[count]);
+   double value=atof(argv[count+1]);
+   assigned_values.insert(key);
+   count+=2;
+   if (key=="--lat_deg1")
+    {
+     lat_deg1=value;
+    }
+   else if (key=="--lon_deg1")
+    {
+     lon_deg1=value;
+    }
+   else if (key=="--lat_deg2")
+    {
+     lat_deg2=value;
+    }
+   else if (key=="--lon_deg2")
+    {
+     lon_deg2=value;
+    }
+   else if (key=="--required_distance_metres")
+    {
+     required_distance_metres=value;
+     if (n_arg==4)
+      {
+       std::cout << "Can't specify required distance with four args\n";
+       abort();
+      }
+    }
+   else
+    {   
+      std::cout << "Never get here; key: " << key << std::endl;
+      abort();
+    }
+  }
+ if (assigned_values.size()!=n_arg)
+  {
+   std::cout << "Not all args specified!"
+             << usage_string << std::endl;
+   abort();
+  }
+ 
+
+ 
+ // Full precision in output
  std::cout.precision(17);
  
  using namespace SphericalCoordinates;
+ 
+ // Creat coordinates
+ Coordinate point1(lon_deg1,lat_deg1);
+ Coordinate point2(lon_deg2,lat_deg2);
 
- double percentage_increase=15.0;
+ // Sanity check
+ Method="Exact";
+ double orig_distance=distance(point1,point2);
+  if (n_arg==4)
+   {
+    std::cout << "Orig distance [km]: " <<  orig_distance << std::endl;
+    exit(0);
+   }
+#ifdef VERBOSE
+  std::cout << "lon_1 lat_1 = " << lon_deg1 << " " << lat_deg1 << std::endl;
+  std::cout << "lon_1 lat_1 = " << lon_deg2 << " " << lat_deg2 << std::endl;
+  std::cout << "Orig distance [km]: " <<  orig_distance << std::endl;
+
+#endif
+ double required_distance=required_distance_metres/1000.0;
+ // Error check
+ if (orig_distance>required_distance)
+  {
+   std::cout << "Required distance: " << required_distance << " km "
+             << "is shorter than original distance "
+             << orig_distance << " km" << std::endl;
+   abort();
+  }
+ double percentage_increase=(required_distance-orig_distance)/
+  orig_distance*100.0;
+ PointFinder(point1,point2,percentage_increase);
+
+ 
+ exit(0);
+ 
+
+
+ 
+//double percentage_increase=15.0;
 
 
 // Do a few tests
