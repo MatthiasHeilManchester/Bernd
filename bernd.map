@@ -1,10 +1,53 @@
 
 
 with(CodeGeneration):
-interface(displayprecision=20);
+#interface(displayprecision=20);
+#Digits:=25;
 
-Digits:=25;
+#===========
+# EXACT AND STABLE
+#===========
+lon1:=theta1;
+lon2:=theta2;
+lat1:=phi1;
+lat2:=phi2;
+dLat:=lat2-lat1;
+dLon:=lon2-lon1;
+a:=sin(dLat/2.0) * sin(dLat/2.0) +
+    sin(dLon/2.0) * sin(dLon/2.0) * cos(lat1) * cos(lat2); 
+c:=2.0 * arctan(sqrt(a),sqrt(1.0-a));
+ds:=Radius*c;
 
+
+dist1:=subs(theta2=theta,phi2=phi,ds);
+dist2:=subs(theta1=theta,phi1=phi,ds);
+
+
+Radius:=6378.388;
+Theta1:=50.47823857900000*Pi/180.0;
+Phi1:=   8.29006690000000*Pi/180.0;
+Theta2:=50.47829943178574*evalf(Pi/180.0);
+Phi2:=   8.28996300000000*Pi/180.0;
+
+test_bernd12:=evalf(subs(theta1=Theta1,phi1=Phi1,theta=Theta2,phi=Phi2,dist1));
+
+
+res0:=dist1+dist2-Required_total_distance;
+res1:=dist1-dist2;
+
+jac00:=diff(res0,theta);
+jac10:=diff(res1,theta);
+jac01:=diff(res0,phi);
+jac11:=diff(res1,phi);
+
+C(jac00,resultname="jac00");
+C(jac01,resultname="jac01");
+C(jac10,resultname="jac10");
+C(jac11,resultname="jac11");
+
+
+#end do;
+@;
 #===========
 # EXACT
 #===========

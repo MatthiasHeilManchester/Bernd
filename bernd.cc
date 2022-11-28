@@ -5,6 +5,7 @@
 #include<fenv.h>
 #include<fstream>
 
+// Use for debugging
 #define VERBOSE
 #undef VERBOSE
 
@@ -33,8 +34,9 @@ namespace SphericalCoordinates
  
  
  //===========================================================
-/// Coordinate class: Phi = latitude (around the equator)
- ///                  Theta = longitude (south pole to north pole)
+/// Coordinate class: 
+ ///                  Theta = latitude (south pole to north pole) 
+ ///                  Phi   = longitude (around the equator)
  //===========================================================
  class Coordinate
  {
@@ -46,7 +48,7 @@ namespace SphericalCoordinates
    {}
   
   
-  /// Constructor: (theta, phi) = longitude, latitude
+  /// Constructor: (theta, phi) = latitude, longitude
   Coordinate(const double& theta_deg, const double& phi_deg) :
    Theta(theta_deg*Pi/180.0), Phi(phi_deg*Pi/180.0)
    {}
@@ -118,7 +120,7 @@ namespace SphericalCoordinates
                  const Coordinate& coord2)
  {
 
-  // Exact spherical polars
+  // Exact spherical polars but unstable
   if (Method=="ExactAndUnstable")
    {
     // https://www.kompf.de/gps/distcalc.html
@@ -231,7 +233,8 @@ namespace SphericalCoordinates
   // Jaobian
   void jacobian(const Coordinate& coord, std::vector<std::vector<double> >& jac)
    {
-   
+
+    // Exact and stable
     if (Method=="Exact")
      {
      
@@ -246,7 +249,250 @@ namespace SphericalCoordinates
      
       double jac00,jac11,jac01,jac10;
      
+jac00 = 0.6378388000e4 * pow(pow(sin(0.5000000000e0 * phi -
+0.5000000000e0 * phi1), 0.2e1) + pow(sin(0.5000000000e0 * theta -
+0.5000000000e0 * theta1), 0.2e1) * cos(phi1) * cos(phi), -0.1e1 /
+0.2e1) * sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1) *
+cos(phi1) * cos(phi) * cos(0.5000000000e0 * theta - 0.5000000000e0 *
+theta1) * pow(0.10e1 - pow(sin(0.5000000000e0 * phi - 0.5000000000e0 *
+phi1), 0.2e1) - pow(sin(0.5000000000e0 * theta - 0.5000000000e0 *
+theta1), 0.2e1) * cos(phi1) * cos(phi), -0.1e1 / 0.2e1) / (0.1e1 +
+(pow(sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1), 0.2e1) +
+pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1), 0.2e1) *
+cos(phi1) * cos(phi)) / (0.10e1 - pow(sin(0.5000000000e0 * phi -
+0.5000000000e0 * phi1), 0.2e1) - pow(sin(0.5000000000e0 * theta -
+0.5000000000e0 * theta1), 0.2e1) * cos(phi1) * cos(phi))) +
+0.6378388000e4 * pow(0.10e1 - pow(sin(0.5000000000e0 * phi -
+0.5000000000e0 * phi1), 0.2e1) - pow(sin(0.5000000000e0 * theta -
+0.5000000000e0 * theta1), 0.2e1) * cos(phi1) * cos(phi), -0.3e1 /
+0.2e1) * sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1) *
+cos(phi1) * cos(phi) * cos(0.5000000000e0 * theta - 0.5000000000e0 *
+theta1) * sqrt(pow(sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1),
+0.2e1) + pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1),
+0.2e1) * cos(phi1) * cos(phi)) / (0.1e1 + (pow(sin(0.5000000000e0 *
+phi - 0.5000000000e0 * phi1), 0.2e1) + pow(sin(0.5000000000e0 * theta
+- 0.5000000000e0 * theta1), 0.2e1) * cos(phi1) * cos(phi)) / (0.10e1 -
+pow(sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1), 0.2e1) -
+pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1), 0.2e1) *
+cos(phi1) * cos(phi))) + 0.6378388000e4 * pow(pow(sin(-0.5000000000e0
+* phi2 + 0.5000000000e0 * phi), 0.2e1) + pow(sin(-0.5000000000e0 *
+theta2 + 0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2),
+-0.1e1 / 0.2e1) * sin(-0.5000000000e0 * theta2 + 0.5000000000e0 *
+theta) * cos(phi) * cos(phi2) * cos(-0.5000000000e0 * theta2 +
+0.5000000000e0 * theta) * pow(0.10e1 - pow(sin(-0.5000000000e0 * phi2
++ 0.5000000000e0 * phi), 0.2e1) - pow(sin(-0.5000000000e0 * theta2 +
+0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2), -0.1e1 /
+0.2e1) / (0.1e1 + (pow(sin(-0.5000000000e0 * phi2 + 0.5000000000e0 *
+phi), 0.2e1) + pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 *
+theta), 0.2e1) * cos(phi) * cos(phi2)) / (0.10e1 -
+pow(sin(-0.5000000000e0 * phi2 + 0.5000000000e0 * phi), 0.2e1) -
+pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 * theta), 0.2e1) *
+cos(phi) * cos(phi2))) + 0.6378388000e4 * pow(0.10e1 -
+pow(sin(-0.5000000000e0 * phi2 + 0.5000000000e0 * phi), 0.2e1) -
+pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 * theta), 0.2e1) *
+cos(phi) * cos(phi2), -0.3e1 / 0.2e1) * sin(-0.5000000000e0 * theta2 +
+0.5000000000e0 * theta) * cos(phi) * cos(phi2) * cos(-0.5000000000e0 *
+theta2 + 0.5000000000e0 * theta) * sqrt(pow(sin(-0.5000000000e0 * phi2
++ 0.5000000000e0 * phi), 0.2e1) + pow(sin(-0.5000000000e0 * theta2 +
+0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2)) / (0.1e1 +
+(pow(sin(-0.5000000000e0 * phi2 + 0.5000000000e0 * phi), 0.2e1) +
+pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 * theta), 0.2e1) *
+cos(phi) * cos(phi2)) / (0.10e1 - pow(sin(-0.5000000000e0 * phi2 +
+0.5000000000e0 * phi), 0.2e1) - pow(sin(-0.5000000000e0 * theta2 +
+0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2))); jac01 =
+0.6378388000e4 * pow(pow(sin(0.5000000000e0 * phi - 0.5000000000e0 *
+phi1), 0.2e1) + pow(sin(0.5000000000e0 * theta - 0.5000000000e0 *
+theta1), 0.2e1) * cos(phi1) * cos(phi), -0.1e1 / 0.2e1) *
+(0.1000000000e1 * sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1) *
+cos(0.5000000000e0 * phi - 0.5000000000e0 * phi1) -
+pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1), 0.2e1) *
+cos(phi1) * sin(phi)) * pow(0.10e1 - pow(sin(0.5000000000e0 * phi -
+0.5000000000e0 * phi1), 0.2e1) - pow(sin(0.5000000000e0 * theta -
+0.5000000000e0 * theta1), 0.2e1) * cos(phi1) * cos(phi), -0.1e1 /
+0.2e1) / (0.1e1 + (pow(sin(0.5000000000e0 * phi - 0.5000000000e0 *
+phi1), 0.2e1) + pow(sin(0.5000000000e0 * theta - 0.5000000000e0 *
+theta1), 0.2e1) * cos(phi1) * cos(phi)) / (0.10e1 -
+pow(sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1), 0.2e1) -
+pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1), 0.2e1) *
+cos(phi1) * cos(phi))) - 0.6378388000e4 * pow(0.10e1 -
+pow(sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1), 0.2e1) -
+pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1), 0.2e1) *
+cos(phi1) * cos(phi), -0.3e1 / 0.2e1) * (-0.1000000000e1 *
+sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1) * cos(0.5000000000e0
+* phi - 0.5000000000e0 * phi1) + pow(sin(0.5000000000e0 * theta -
+0.5000000000e0 * theta1), 0.2e1) * cos(phi1) * sin(phi)) *
+sqrt(pow(sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1), 0.2e1) +
+pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1), 0.2e1) *
+cos(phi1) * cos(phi)) / (0.1e1 + (pow(sin(0.5000000000e0 * phi -
+0.5000000000e0 * phi1), 0.2e1) + pow(sin(0.5000000000e0 * theta -
+0.5000000000e0 * theta1), 0.2e1) * cos(phi1) * cos(phi)) / (0.10e1 -
+pow(sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1), 0.2e1) -
+pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1), 0.2e1) *
+cos(phi1) * cos(phi))) + 0.6378388000e4 * pow(pow(sin(-0.5000000000e0
+* phi2 + 0.5000000000e0 * phi), 0.2e1) + pow(sin(-0.5000000000e0 *
+theta2 + 0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2),
+-0.1e1 / 0.2e1) * (0.1000000000e1 * sin(-0.5000000000e0 * phi2 +
+0.5000000000e0 * phi) * cos(-0.5000000000e0 * phi2 + 0.5000000000e0 *
+phi) - pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 * theta),
+0.2e1) * sin(phi) * cos(phi2)) * pow(0.10e1 - pow(sin(-0.5000000000e0
+* phi2 + 0.5000000000e0 * phi), 0.2e1) - pow(sin(-0.5000000000e0 *
+theta2 + 0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2),
+-0.1e1 / 0.2e1) / (0.1e1 + (pow(sin(-0.5000000000e0 * phi2 +
+0.5000000000e0 * phi), 0.2e1) + pow(sin(-0.5000000000e0 * theta2 +
+0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2)) / (0.10e1 -
+pow(sin(-0.5000000000e0 * phi2 + 0.5000000000e0 * phi), 0.2e1) -
+pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 * theta), 0.2e1) *
+cos(phi) * cos(phi2))) - 0.6378388000e4 * pow(0.10e1 -
+pow(sin(-0.5000000000e0 * phi2 + 0.5000000000e0 * phi), 0.2e1) -
+pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 * theta), 0.2e1) *
+cos(phi) * cos(phi2), -0.3e1 / 0.2e1) * (-0.1000000000e1 *
+sin(-0.5000000000e0 * phi2 + 0.5000000000e0 * phi) *
+cos(-0.5000000000e0 * phi2 + 0.5000000000e0 * phi) +
+pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 * theta), 0.2e1) *
+sin(phi) * cos(phi2)) * sqrt(pow(sin(-0.5000000000e0 * phi2 +
+0.5000000000e0 * phi), 0.2e1) + pow(sin(-0.5000000000e0 * theta2 +
+0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2)) / (0.1e1 +
+(pow(sin(-0.5000000000e0 * phi2 + 0.5000000000e0 * phi), 0.2e1) +
+pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 * theta), 0.2e1) *
+cos(phi) * cos(phi2)) / (0.10e1 - pow(sin(-0.5000000000e0 * phi2 +
+0.5000000000e0 * phi), 0.2e1) - pow(sin(-0.5000000000e0 * theta2 +
+0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2))); jac10 =
+0.6378388000e4 * pow(pow(sin(0.5000000000e0 * phi - 0.5000000000e0 *
+phi1), 0.2e1) + pow(sin(0.5000000000e0 * theta - 0.5000000000e0 *
+theta1), 0.2e1) * cos(phi1) * cos(phi), -0.1e1 / 0.2e1) *
+sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1) * cos(phi1) *
+cos(phi) * cos(0.5000000000e0 * theta - 0.5000000000e0 * theta1) *
+pow(0.10e1 - pow(sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1),
+0.2e1) - pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1),
+0.2e1) * cos(phi1) * cos(phi), -0.1e1 / 0.2e1) / (0.1e1 +
+(pow(sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1), 0.2e1) +
+pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1), 0.2e1) *
+cos(phi1) * cos(phi)) / (0.10e1 - pow(sin(0.5000000000e0 * phi -
+0.5000000000e0 * phi1), 0.2e1) - pow(sin(0.5000000000e0 * theta -
+0.5000000000e0 * theta1), 0.2e1) * cos(phi1) * cos(phi))) +
+0.6378388000e4 * pow(0.10e1 - pow(sin(0.5000000000e0 * phi -
+0.5000000000e0 * phi1), 0.2e1) - pow(sin(0.5000000000e0 * theta -
+0.5000000000e0 * theta1), 0.2e1) * cos(phi1) * cos(phi), -0.3e1 /
+0.2e1) * sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1) *
+cos(phi1) * cos(phi) * cos(0.5000000000e0 * theta - 0.5000000000e0 *
+theta1) * sqrt(pow(sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1),
+0.2e1) + pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1),
+0.2e1) * cos(phi1) * cos(phi)) / (0.1e1 + (pow(sin(0.5000000000e0 *
+phi - 0.5000000000e0 * phi1), 0.2e1) + pow(sin(0.5000000000e0 * theta
+- 0.5000000000e0 * theta1), 0.2e1) * cos(phi1) * cos(phi)) / (0.10e1 -
+pow(sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1), 0.2e1) -
+pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1), 0.2e1) *
+cos(phi1) * cos(phi))) - 0.6378388000e4 * pow(pow(sin(-0.5000000000e0
+* phi2 + 0.5000000000e0 * phi), 0.2e1) + pow(sin(-0.5000000000e0 *
+theta2 + 0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2),
+-0.1e1 / 0.2e1) * sin(-0.5000000000e0 * theta2 + 0.5000000000e0 *
+theta) * cos(phi) * cos(phi2) * cos(-0.5000000000e0 * theta2 +
+0.5000000000e0 * theta) * pow(0.10e1 - pow(sin(-0.5000000000e0 * phi2
++ 0.5000000000e0 * phi), 0.2e1) - pow(sin(-0.5000000000e0 * theta2 +
+0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2), -0.1e1 /
+0.2e1) / (0.1e1 + (pow(sin(-0.5000000000e0 * phi2 + 0.5000000000e0 *
+phi), 0.2e1) + pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 *
+theta), 0.2e1) * cos(phi) * cos(phi2)) / (0.10e1 -
+pow(sin(-0.5000000000e0 * phi2 + 0.5000000000e0 * phi), 0.2e1) -
+pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 * theta), 0.2e1) *
+cos(phi) * cos(phi2))) - 0.6378388000e4 * pow(0.10e1 -
+pow(sin(-0.5000000000e0 * phi2 + 0.5000000000e0 * phi), 0.2e1) -
+pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 * theta), 0.2e1) *
+cos(phi) * cos(phi2), -0.3e1 / 0.2e1) * sin(-0.5000000000e0 * theta2 +
+0.5000000000e0 * theta) * cos(phi) * cos(phi2) * cos(-0.5000000000e0 *
+theta2 + 0.5000000000e0 * theta) * sqrt(pow(sin(-0.5000000000e0 * phi2
++ 0.5000000000e0 * phi), 0.2e1) + pow(sin(-0.5000000000e0 * theta2 +
+0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2)) / (0.1e1 +
+(pow(sin(-0.5000000000e0 * phi2 + 0.5000000000e0 * phi), 0.2e1) +
+pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 * theta), 0.2e1) *
+cos(phi) * cos(phi2)) / (0.10e1 - pow(sin(-0.5000000000e0 * phi2 +
+0.5000000000e0 * phi), 0.2e1) - pow(sin(-0.5000000000e0 * theta2 +
+0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2))); jac11 =
+0.6378388000e4 * pow(pow(sin(0.5000000000e0 * phi - 0.5000000000e0 *
+phi1), 0.2e1) + pow(sin(0.5000000000e0 * theta - 0.5000000000e0 *
+theta1), 0.2e1) * cos(phi1) * cos(phi), -0.1e1 / 0.2e1) *
+(0.1000000000e1 * sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1) *
+cos(0.5000000000e0 * phi - 0.5000000000e0 * phi1) -
+pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1), 0.2e1) *
+cos(phi1) * sin(phi)) * pow(0.10e1 - pow(sin(0.5000000000e0 * phi -
+0.5000000000e0 * phi1), 0.2e1) - pow(sin(0.5000000000e0 * theta -
+0.5000000000e0 * theta1), 0.2e1) * cos(phi1) * cos(phi), -0.1e1 /
+0.2e1) / (0.1e1 + (pow(sin(0.5000000000e0 * phi - 0.5000000000e0 *
+phi1), 0.2e1) + pow(sin(0.5000000000e0 * theta - 0.5000000000e0 *
+theta1), 0.2e1) * cos(phi1) * cos(phi)) / (0.10e1 -
+pow(sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1), 0.2e1) -
+pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1), 0.2e1) *
+cos(phi1) * cos(phi))) - 0.6378388000e4 * pow(0.10e1 -
+pow(sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1), 0.2e1) -
+pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1), 0.2e1) *
+cos(phi1) * cos(phi), -0.3e1 / 0.2e1) * (-0.1000000000e1 *
+sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1) * cos(0.5000000000e0
+* phi - 0.5000000000e0 * phi1) + pow(sin(0.5000000000e0 * theta -
+0.5000000000e0 * theta1), 0.2e1) * cos(phi1) * sin(phi)) *
+sqrt(pow(sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1), 0.2e1) +
+pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1), 0.2e1) *
+cos(phi1) * cos(phi)) / (0.1e1 + (pow(sin(0.5000000000e0 * phi -
+0.5000000000e0 * phi1), 0.2e1) + pow(sin(0.5000000000e0 * theta -
+0.5000000000e0 * theta1), 0.2e1) * cos(phi1) * cos(phi)) / (0.10e1 -
+pow(sin(0.5000000000e0 * phi - 0.5000000000e0 * phi1), 0.2e1) -
+pow(sin(0.5000000000e0 * theta - 0.5000000000e0 * theta1), 0.2e1) *
+cos(phi1) * cos(phi))) - 0.6378388000e4 * pow(pow(sin(-0.5000000000e0
+* phi2 + 0.5000000000e0 * phi), 0.2e1) + pow(sin(-0.5000000000e0 *
+theta2 + 0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2),
+-0.1e1 / 0.2e1) * (0.1000000000e1 * sin(-0.5000000000e0 * phi2 +
+0.5000000000e0 * phi) * cos(-0.5000000000e0 * phi2 + 0.5000000000e0 *
+phi) - pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 * theta),
+0.2e1) * sin(phi) * cos(phi2)) * pow(0.10e1 - pow(sin(-0.5000000000e0
+* phi2 + 0.5000000000e0 * phi), 0.2e1) - pow(sin(-0.5000000000e0 *
+theta2 + 0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2),
+-0.1e1 / 0.2e1) / (0.1e1 + (pow(sin(-0.5000000000e0 * phi2 +
+0.5000000000e0 * phi), 0.2e1) + pow(sin(-0.5000000000e0 * theta2 +
+0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2)) / (0.10e1 -
+pow(sin(-0.5000000000e0 * phi2 + 0.5000000000e0 * phi), 0.2e1) -
+pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 * theta), 0.2e1) *
+cos(phi) * cos(phi2))) + 0.6378388000e4 * pow(0.10e1 -
+pow(sin(-0.5000000000e0 * phi2 + 0.5000000000e0 * phi), 0.2e1) -
+pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 * theta), 0.2e1) *
+cos(phi) * cos(phi2), -0.3e1 / 0.2e1) * (-0.1000000000e1 *
+sin(-0.5000000000e0 * phi2 + 0.5000000000e0 * phi) *
+cos(-0.5000000000e0 * phi2 + 0.5000000000e0 * phi) +
+pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 * theta), 0.2e1) *
+sin(phi) * cos(phi2)) * sqrt(pow(sin(-0.5000000000e0 * phi2 +
+0.5000000000e0 * phi), 0.2e1) + pow(sin(-0.5000000000e0 * theta2 +
+0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2)) / (0.1e1 +
+(pow(sin(-0.5000000000e0 * phi2 + 0.5000000000e0 * phi), 0.2e1) +
+pow(sin(-0.5000000000e0 * theta2 + 0.5000000000e0 * theta), 0.2e1) *
+cos(phi) * cos(phi2)) / (0.10e1 - pow(sin(-0.5000000000e0 * phi2 +
+0.5000000000e0 * phi), 0.2e1) - pow(sin(-0.5000000000e0 * theta2 +
+0.5000000000e0 * theta), 0.2e1) * cos(phi) * cos(phi2)));
+// end maple
 
+
+      jac[0][0]=jac00;
+      jac[1][1]=jac11;
+      jac[1][0]=jac10;
+      jac[0][1]=jac01;
+
+
+
+     }
+
+  // Exact spherical polars but unstable
+    else if (Method=="ExactAndUnstable")
+     {
+      
+      double theta=coord.theta();
+      double phi=coord.phi();
+     
+      double theta1=Coord1.theta();
+      double phi1=Coord1.phi();
+     
+      double theta2=Coord2.theta();
+      double phi2=Coord2.phi();
+     
+      double jac00,jac11,jac01,jac10;
+
+     
       // Maple
       jac00 = -Radius * (sin(theta1) * cos(theta) - cos(theta1) *
       sin(theta) * cos(phi - phi1)) * pow(-pow(sin(theta1) *
@@ -355,7 +601,7 @@ namespace SphericalCoordinates
   /// Newton solver:
   void find_new_point()
    {
-    // Newton tolerance on max. residual relative to orig length
+    // Newton tolerance on max. residual relative to orig length: 0.01%
     double fractional_tol=1.0e-4;
     
     // Create initial guess based on constant metric
@@ -465,6 +711,10 @@ namespace SphericalCoordinates
 
           if (max_res<tol)
            {
+#ifdef VERBOSE
+            std::cout << "Newton method converged in " << iter
+                      << " iterations." << std::endl;
+#endif
             converged=true;
             break;
            }
@@ -492,8 +742,8 @@ namespace SphericalCoordinates
         // Tell us what you have!
         if (Method=="Exact")
          {
-          std::cout << "Lon (degrees) = " << coord.theta_deg() << " "
-                    << "Lat (degrees) = " << coord.phi_deg() << " "
+          std::cout << "Lat (degrees) = " << coord.theta_deg() << " "
+                    << "Lon (degrees) = " << coord.phi_deg() << " "
                     << std::endl;
          }
 #ifdef VERBOSE
@@ -553,7 +803,7 @@ int main(int argc, char** argv)
 
  // 4 or 5 items of input data with identifiers
  std::string usage_string=
-  "\nUsage: \n\n ./bernd --lon_deg1 50.478238579 --lat_deg1 8.2900669  --lon_deg2 50.47829943178574 --lat_deg2 8.289963 --required_distance_metres 12.0  \n\n or \n\n ./bernd --lon_deg1 50.478238579 --lat_deg1 8.2900669  --lon_deg2 50.47829943178574 --lat_deg2 8.289963 \n\n";
+  "\nUsage: \n\n ./bernd --lat_deg1 50.478238579 --lon_deg1 8.2900669  --lat_deg2 50.47829943178574 --lon_deg2 8.289963 --required_distance_metres 12.0  \n\n or \n\n ./bernd --lat_deg1 50.478238579 --lon_deg1 8.2900669  --lat_deg2 50.47829943178574 --lon_deg2 8.289963 \n\n";
  if ((argc!=11)&&(argc!=9))
   {
    std::cout << "Error: argc = "<< argc << usage_string
@@ -620,9 +870,9 @@ int main(int argc, char** argv)
  
  using namespace SphericalCoordinates;
  
- // Creat coordinates
- Coordinate point1(lon_deg1,lat_deg1);
- Coordinate point2(lon_deg2,lat_deg2);
+ // Create coordinates
+ Coordinate point1(lat_deg1,lon_deg1);
+ Coordinate point2(lat_deg2,lon_deg2);
 
  // Sanity check
  Method="Exact";
@@ -651,98 +901,102 @@ int main(int argc, char** argv)
   orig_distance*100.0;
  PointFinder(point1,point2,percentage_increase);
 
- 
- exit(0);
- 
 
 
- 
-//double percentage_increase=15.0;
 
 
+// Validation?
+ bool do_validation=false;
+ if (!do_validation)
+  {
+   exit(0);
+  }
+ else
+  {
+   
 // Do a few tests
  
- std::cout << "\n====================================================\n\n";
- {
-  
-  Coordinate berlin(52.5164,13.3777);
-  Coordinate lisbon(38.692668,-9.177944);
-  Method="Exact";
-  double dist_berlin_lisbon=distance(berlin,lisbon);
-  std::cout << "Berlin-Lisbon: " <<  dist_berlin_lisbon << std::endl;
-  PointFinder(berlin,lisbon,percentage_increase);
- }
- std::cout << "\n\n====================================================\n\n";
- {
-  Coordinate rhm_bahnhof(49.9917,8.41321);
-  Coordinate rhm_bruecke(50.0049,8.42182);
-  Method="Exact";
-  double dist_rhm=distance(rhm_bahnhof,rhm_bruecke);
-  std::cout << "Rhm: " << dist_rhm << std::endl;
-  PointFinder(rhm_bahnhof,rhm_bruecke,percentage_increase);
- }
- std::cout << "\n\n====================================================\n\n";
- {
-  Coordinate bernd1(50.478238579,     8.2900669);
-  Coordinate bernd2(50.47829943178574,8.289963);
-  Method="Exact";
-  double dist_bernd=distance(bernd1,bernd2);
-  std::cout << "Bernd: " <<  dist_bernd<< std::endl;
-  PointFinder(bernd1,bernd2,percentage_increase);
- }
- std::cout << "\n\n====================================================\n\n";
- {
-
-  // Assess stability of two different ways of computing the distance
-  std::ofstream some_file;
-  some_file.open("stability.dat");
-  some_file.precision(17);
-  
-  Coordinate bernd1(50.478238579,     8.2900669);
-  Coordinate bernd2(50.47829943178574,8.289963);
-
-  Method="ExactAndUnstable";
-  double dist_unstable=distance(bernd1,bernd2);
-  Method="Exact";
-  double dist_stable=distance(bernd1,bernd2);
-  double angular_distance=sqrt(pow(bernd1.theta()-bernd2.theta(),2)+
-                               pow(bernd1.phi()  -bernd2.phi()  ,2));
-  some_file << "ZONE" << std::endl;
-  some_file
-   << angular_distance << " "
-   << dist_stable << " "
-   << dist_unstable << " "
-   << fabs(dist_unstable-dist_stable)/fabs(dist_stable)*100.0 << " "
-   << std::endl;
-  some_file << "ZONE" << std::endl;
-
-  
-  double dtheta=10000.0*(bernd2.theta()-bernd1.theta());
-  double dphi  =10000.0*(bernd2.phi()  -bernd1.phi());
-  unsigned nstep=10;
-  for (unsigned i=0;i<nstep;i++)
+   std::cout << "\n====================================================\n\n";
    {
-    Coordinate bernd_aux((bernd1.theta()+dtheta/pow(10.0,i))*180.0/Pi,
-                         (bernd1.phi()  +dphi  /pow(10.0,i))*180.0/Pi);
-    
-    Method="ExactAndUnstable";
-    double dist_unstable=distance(bernd1,bernd_aux);
+  
+    Coordinate berlin(52.5164,13.3777);
+    Coordinate lisbon(38.692668,-9.177944);
     Method="Exact";
-    double dist_stable=distance(bernd1,bernd_aux);
-    double angular_distance=sqrt(pow(bernd1.theta()-bernd_aux.theta(),2)+
-                                 pow(bernd1.phi()  -bernd_aux.phi()  ,2));
+    double dist_berlin_lisbon=distance(berlin,lisbon);
+    std::cout << "Berlin-Lisbon: " <<  dist_berlin_lisbon << std::endl;
+    PointFinder(berlin,lisbon,percentage_increase);
+   }
+   std::cout << "\n\n====================================================\n\n";
+   {
+    Coordinate rhm_bahnhof(49.9917,8.41321);
+    Coordinate rhm_bruecke(50.0049,8.42182);
+    Method="Exact";
+    double dist_rhm=distance(rhm_bahnhof,rhm_bruecke);
+    std::cout << "Rhm: " << dist_rhm << std::endl;
+    PointFinder(rhm_bahnhof,rhm_bruecke,percentage_increase);
+   }
+   std::cout << "\n\n====================================================\n\n";
+   {
+    Coordinate bernd1(50.478238579,     8.2900669);
+    Coordinate bernd2(50.47829943178574,8.289963);
+    Method="Exact";
+    double dist_bernd=distance(bernd1,bernd2);
+    std::cout << "Bernd: " <<  dist_bernd<< std::endl;
+    PointFinder(bernd1,bernd2,percentage_increase);
+   }
+   std::cout << "\n\n====================================================\n\n";
+   {
+
+    // Assess stability of two different ways of computing the distance
+    std::ofstream some_file;
+    some_file.open("stability.dat");
+    some_file.precision(17);
+  
+    Coordinate bernd1(50.478238579,     8.2900669);
+    Coordinate bernd2(50.47829943178574,8.289963);
+
+    Method="ExactAndUnstable";
+    double dist_unstable=distance(bernd1,bernd2);
+    Method="Exact";
+    double dist_stable=distance(bernd1,bernd2);
+    double angular_distance=sqrt(pow(bernd1.theta()-bernd2.theta(),2)+
+                                 pow(bernd1.phi()  -bernd2.phi()  ,2));
+    some_file << "ZONE" << std::endl;
     some_file
      << angular_distance << " "
      << dist_stable << " "
      << dist_unstable << " "
      << fabs(dist_unstable-dist_stable)/fabs(dist_stable)*100.0 << " "
      << std::endl;
+    some_file << "ZONE" << std::endl;
+
+  
+    double dtheta=10000.0*(bernd2.theta()-bernd1.theta());
+    double dphi  =10000.0*(bernd2.phi()  -bernd1.phi());
+    unsigned nstep=10;
+    for (unsigned i=0;i<nstep;i++)
+     {
+      Coordinate bernd_aux((bernd1.theta()+dtheta/pow(10.0,i))*180.0/Pi,
+                           (bernd1.phi()  +dphi  /pow(10.0,i))*180.0/Pi);
+    
+      Method="ExactAndUnstable";
+      double dist_unstable=distance(bernd1,bernd_aux);
+      Method="Exact";
+      double dist_stable=distance(bernd1,bernd_aux);
+      double angular_distance=sqrt(pow(bernd1.theta()-bernd_aux.theta(),2)+
+                                   pow(bernd1.phi()  -bernd_aux.phi()  ,2));
+      some_file
+       << angular_distance << " "
+       << dist_stable << " "
+       << dist_unstable << " "
+       << fabs(dist_unstable-dist_stable)/fabs(dist_stable)*100.0 << " "
+       << std::endl;
      
      }
-  some_file.close();
+    some_file.close();
 
- }
- 
+   }
+  }
 
  return 0;
 
